@@ -205,7 +205,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
         {
             // Get a media processor reference, and pass to it the name of the 
             // processor to use for the specific task.
-            IMediaProcessor processorMES = GetLatestMediaProcessorByName("Media Encoder Standard");
+            IMediaProcessor processorMES = GetLatestMediaProcessorByName("Azure Media Indexer 2 Preview");
 
             string preset = data.mesPreset;
 
@@ -225,7 +225,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
                 }
                 else
                 {
-                    presetPath = Path.Combine(homePath, @"site\repository\media-functions-for-logic-app\presets\" + preset);
+                    presetPath = Path.Combine(homePath, @"site\wwwroot\presets\" + preset);
                 }
                 log.Info($"Preset path : {presetPath}");
                 preset = File.ReadAllText(presetPath);
@@ -233,7 +233,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
 
             // Create a task with the encoding details, using a string preset.
             // In this case "H264 Multiple Bitrate 720p" system defined preset is used.
-            taskEncoding = job.Tasks.AddNew("MES encoding task",
+            taskEncoding = job.Tasks.AddNew("Indexing Task",
                processorMES,
                preset,
                TaskOptions.None);
@@ -245,7 +245,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
             // Add an output asset to contain the results of the job. 
             // This output is specified as AssetCreationOptions.None, which 
             // means the output asset is not encrypted. 
-            outputEncoding = taskEncoding.OutputAssets.AddNew(asset.Name + " MES encoded", AssetCreationOptions.None);
+            outputEncoding = taskEncoding.OutputAssets.AddNew(asset.Name + " Indexed", AssetCreationOptions.None);
         }
 
         if (data.workflowAssetId != null)// Premium Encoder Task
@@ -298,16 +298,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
         IAsset an_asset = useEncoderOutputForAnalytics ? outputEncoding : asset;
 
         // Media Analytics
-        OutputIndex1 = AddTask(job, an_asset, (string)data.indexV1Language, "Azure Media Indexer", "IndexerV1.xml", "English", ref taskindex);
-        OutputIndex2 = AddTask(job, an_asset, (string)data.indexV2Language, "Azure Media Indexer 2 Preview", "IndexerV2.json", "EnUs", ref taskindex);
-        OutputOCR = AddTask(job, an_asset, (string)data.ocrLanguage, "Azure Media OCR", "OCR.json", "AutoDetect", ref taskindex);
-        OutputFaceDetection = AddTask(job, an_asset, (string)data.faceDetectionMode, "Azure Media Face Detector", "FaceDetection.json", "PerFaceEmotion", ref taskindex);
-        OutputFaceRedaction = AddTask(job, an_asset, (string)data.faceRedactionMode, "Azure Media Redactor", "FaceRedaction.json", "combined", ref taskindex);
-        OutputMotion = AddTask(job, an_asset, (string)data.motionDetectionLevel, "Azure Media Motion Detector", "MotionDetection.json", "medium", ref taskindex);
-        OutputSummarization = AddTask(job, an_asset, (string)data.summarizationDuration, "Azure Media Video Thumbnails", "Summarization.json", "0.0", ref taskindex);
-
-        // Hyperlapse
-        OutputHyperlapse = AddTask(job, asset, (string)data.hyperlapseSpeed, "Azure Media Hyperlapse", "Hyperlapse.json", "8", ref taskindex);
+        // OutputIndex1 = AddTask(job, an_asset, (string)data.indexV1Language, "Azure Media Indexer", "IndexerV1.xml", "English", ref taskindex);
 
         job.Submit();
         log.Info("Job Submitted");
