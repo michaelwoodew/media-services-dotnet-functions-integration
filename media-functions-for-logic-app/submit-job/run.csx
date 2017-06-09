@@ -152,6 +152,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
     IJob job = null;
     ITask taskEncoding = null;
 
+
     int OutputMES = -1;
     int OutputMEPW = -1;
     int OutputIndex1 = -1;
